@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#Variables
+var1="coucou2"
+var2=$(ip a)
+
+#Fonctions
+
+function menu (){
+    echo "---Menu---"
+    echo "1) Afficher date et heure"
+    echo "2) Ma charge système"
+    echo "3) Infos de versions du systèmes"
+    echo "4) Sortie"
+    read -p "Votre choix : " choice
+    case $choice in
+        "1") date ;;
+        "2") uptime -p ;;
+        "3") uname -a ;;
+        "4") exit 1 ;;
+        *) echo "Choix incorrect" ;;
+    esac
+    menu2
+}
+
+function menu2(){
+    echo "---Menu---"
+    echo "1) Afficher les utilisateurs du systèmes"
+    echo "2) Affiche seulement les noms"
+    echo "3) Sortie"
+    read -p "Votre choix : " choice2
+    case $choice2 in
+        "1") cat /etc/passwd ;;
+        "2") egrep -e "^[a-z]+" /etc/passwd ;;
+        "3") exit 1 ;;
+        *) echo "Choix incorrect"
+    esac
+    menu3
+}
+
+function menu3(){
+    echo "---Menu---"
+    echo "1) Afficher les groupes"
+    echo "2) Afficher seulement les noms"
+    echo "3) Sortie"
+    read -p "Votre choix : " choice3
+
+    if [ $choice3 == "1" ] 
+    then
+        cat /etc/passwd
+    elif [ $choice3 == "2" ]
+    then
+        egrep -e "^[a-z]+" /etc/group
+    elif [ $choice3 == "3" ]
+    then
+        exit 1
+    else
+        echo "Choix incorrect"
+    fi
+    menu
+}
+
+#Début du programme
+
+menu
