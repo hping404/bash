@@ -1,0 +1,72 @@
+#!/bin/bash
+
+#---------Variables
+web=apache2
+web2=nginx
+dossier_web="/var/www/html/share"
+verifweb=$(systemctl is-active $web) #Variable qui a le résultat de la commande, donc actif ou inactif, sans le --quiet car on doit savoir
+verifweb2=$(systemctl is-active $web2)
+
+
+
+
+#---------Fonctions
+#afficher menu web
+function menu_web(){
+    clear
+    echo "===Gestion des services web==="
+    echo "1) Installation d'un service web"
+    echo "2) Création d'un dossier de partage"
+    echo "3) Démarrage du service web"
+    echo "4) Arrêt du partage"
+    read -p "Quel est votre choix : " choix
+    
+    if [ $choix == 1 ]; then
+    install
+    elif [ $choix == 2 ]; then
+    start
+    elif [ $choix == 3 ]; then
+    sharedir
+    elif [ $choix == 4 ]; then
+    systemctl stop $web || systemctl stop $web2
+    fi
+}
+
+#voir si le service est actif mais ne fait pas la diff entre installé ou non, le quiet est pour ne pas avoir trop d'info
+function install(){
+    if systemctl is-active --quiet "$web"
+    then
+        echo "Le service $web est actif" && sleep 2
+    elif systemctl is-active --quiet "$web2"
+    then
+        echo "Le service $web2 est actif" && sleep 2
+    else
+        echo "Aucun service actif, installation d'un service web" && apt install nginx -y
+    fi
+}
+
+#Dossier de partage
+function sharedir(){
+    #-d vérifier l'existence
+    if [ -d $dossier_web ]
+    then
+        echo "Le dossier existe, il est situé dans $dossier_web"
+    else
+        mkdir $dossier_web && chmod 744 $dossier_web && echo "Dossier $dossier_web créé"
+    fi
+}
+
+#Démarrer service web
+function start(){
+    if [ $verifweb == "inactive" ] || [ $verifweb2 == "inactive"]
+    then
+        systemctl start $web || systemctl start $web2
+        echo "Le service web est actif"
+    else
+        echo "Aucun service web trouvé !"
+    fi
+}
+
+#début du programme
+
+menu_web
