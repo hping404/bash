@@ -1,0 +1,75 @@
+#!/bin/bash
+
+#--------------Variables
+
+dossier_smb="/home/share" #ceci permet de faire un raccourci, la variable prend ce qui est représentée...
+
+
+#-------------Fonctions
+function menu_samba(){
+    clear
+    echo "===Gestion des services de partage==="
+    echo "1) Installation d'un service"
+    echo "2) Création d'un dossier de partage"
+    echo "3) Configuration du service"
+    echo "4) Démarrage du service"
+    echo "5) Arrêt du service"
+    read -p "Quel est votre choix ? " choice
+
+    if [ $choice == 1 ]
+    then
+        apt install samba &> /dev/null && echo "" > /etc/samba/smb.conf
+    elif [ $choice == 2 ]
+    then
+        share_dir
+    elif [ $choice == 3 ]
+    then
+        config_smb
+    elif [ $choice == 4 ]
+    then
+        systemctl start smbd && echo "Le service est actif"
+    elif [ $choice == 5 ]
+    then
+        systemctl stop smbd && echo "Le service est inactif"
+    fi
+}
+
+
+function share_dir(){
+    if [ -d $dossier_smb ] #si le dossier existe
+    then
+        echo "Le dossier exoste déjà, il est situé dans $dossier_smb"
+    else
+    mkdir $dossier_smb && echo "Dossier créé, il se trouve dans : $dossier_smb"
+    fi
+}
+
+
+function config_smb(){
+    clear
+    read -p "Comment appeler le partage ? " partage_web
+    read -p "Quel utilisateur peut se connecter au partage ? " user_smb
+    smbpasswd $user_smb #pour créer un mdp car obligatoire, le mdp que tu as déjà peut pas etre utilisé
+    echo "
+    [$partage_smb]
+    path = $dossier_smb
+    guest ok = no
+    read only = no
+    broweable = yes
+    valid users = @$user_smb
+    min protocol = SMB2
+    client min protocol = SMB2 " > /etc/samba/smbd.conf
+
+    systemctl restart smbd
+    chmod 766 $dossier_smb
+    clear
+    echo "Partage actif pour $user_smb le partage se trouve dans $dossier_smb et se nomme $partage_smb"
+    read -p "Appuyez sur une touche pour continuer" #en ne mettant pas de variable apres tu peux mettre le programme en standby et repartir en appuyant sur X touche
+}
+#broweable si on peut naviguer dans le partage
+#sur certain protocole il y a un "d" à la fin, il s'agit de daemon, c'est le service, concretement celui sans le d est le service client et l'autre est pour la config du serveur
+
+
+#-------------Début programme
+
+menu_samba
