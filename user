@@ -1,0 +1,154 @@
+#!/bin/bash
+clear
+
+#--------Fonction création utilisateur------
+function menu_user(){
+    clear
+    read -p "Voulez-vous créer un nouvel utilisateur ? " reponse
+    if [[ "$reponse" == "oui" || "$reponse" == "Oui" ]]; then
+        create_user
+    else
+        menu_principal
+    fi
+}
+#----------------------
+function create_user(){
+    clear
+    read -p "Entrez un nom d'utilisateur : " username
+    if id "$username" &> /dev/null; then
+        echo "L'utilisateur $username existe déjà"
+    fi
+
+    read -p "Voulez vous un mdp perso (p) ou en générer un (g) ? " choix
+    if [ "$choix" == p ]; then
+        read -s -p "Entrez un mot de passe pour $username : " password
+    else
+        password=$(openssl rand -base64 15)
+        echo "Mot de passe aléatoire généré pour $username : $password" && read -p "Appuyez sur une touche pour continuer..."
+    fi
+    adduser $username
+    echo "$username:$password" | chpasswd 
+    echo " L'utilisateur $username a été créé !"
+}
+
+
+#---------Fonction supprimer utilisateur-------
+function delete(){
+    clear
+    read -p "Quel utilisateur souhaitez-vous supprimer ? " user
+    if id $user &> /dev/null
+    then
+        sudo userdel -f $user
+        echo "L'utilisateur $user a été supprimé."
+    else
+        echo "L'utilisateur $user n'existe pas !"
+        return 1
+    fi
+    echo "Retour au menu principal..."
+    sleep 3
+    menu_principal
+}
+
+
+#------------Fonction gérer les droits utilisateurs------------
+function droit(){
+    clear
+    echo "===== Gestion des droits des utilisateurs ====="
+    read -p "Entrez le nom d'utilisateur : " username
+    read -p "Entrez le fichier ou répertoire à modifier (path) : " cible
+
+    #-------Vérifier si l'utilisateur existe----------------
+    if ! id "$username" &> /dev/null; then
+        echo "Erreur : L'utilisateur $username n'existe pas."
+        return 1
+    fi
+
+    #-------Vérifier si le fichier ou répertoire existe--------
+    if [ ! -e "$cible" ]; then
+        echo "Erreur : Le fichier ou répertoire $cible n'existe pas."
+        return 1
+    fi
+    #---------Menu pour les droits---------
+    echo "Choisissez les permissions à appliquer :"
+    echo "1) Lecture seule"
+    echo "2) Lecture et écriture"
+    echo "3) Lecture, écriture et exécution"
+    echo "4) Supprimer les droits pour cet utilisateur"
+    read -p "Votre choix (1-4) : " choix
+    case $choix in
+        1)
+            setfacl -m u:"$username":r "$cible"
+            echo "Lecture seule appliquée pour $username sur $cible."
+            ;;
+        2)
+            setfacl -m u:"$username":rw "$cible"
+            echo "Lecture et écriture appliquées pour $username sur $cible."
+            ;;
+        3)
+            setfacl -m u:"$username":rwx "$cible"
+            echo "Lecture, écriture et exécution appliquées pour $username sur $cible."
+            ;;
+        4)
+            setfacl -x u:"$username" "$cible"
+            echo "Tous les droits ont été retirés pour $username sur $cible."
+            ;;
+        *)
+            echo "Option invalide. Aucun changement effectué."
+            return 1
+            ;;
+    esac
+    
+    echo "Les droits de $username sur $cible ont été modifiés !"
+
+    menu_principal
+}
+
+
+#-------Fonction informations-----------
+function info(){
+    clear
+    echo "=====Menu informations====="
+    echo "---------------------------"
+    echo "1) Liste des utilisateurs"
+    echo "2) Liste des droits de l'utilisateurs"
+    read -p "Votre choix : " choix
+    if [ "$choix" == "1" ]; then
+        awk -F: '{ print $1 }' /etc/passwd
+    elif [ "$choix" == "2" ]; then 
+        read -p "Entrez un fichier ou un répertoire : " path
+        getfacl "$path"
+    else
+        return 1
+    fi
+    read -p ""
+    menu_principal
+}
+
+#------Fonction menu principal---------
+function menu_principal(){
+    clear
+    echo "=======Menu utilisateurs======="
+    echo "---------------------------------"
+    echo "1) Créer un nouvel utilisateur"
+    echo "2) Supprimer un utilisateur existant"
+    echo "3) Gérer les droits utilisateurs"
+    echo "4) Informations"
+    echo "q) Sortir"
+    read -p "Votre choix : " choix
+    case $choix in
+        "1") menu_user;;
+        "2") delete;;
+        "3") droit;;
+        "4") info ;;
+        "q") exit 1;;
+    esac
+}
+
+#------Condition lancer avec root------
+if [$EUID -ne 0 ]
+then
+    echo "Ce script doit être lancé par root."
+    exit 1
+fi
+
+menu_principal
