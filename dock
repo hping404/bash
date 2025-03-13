@@ -1,0 +1,81 @@
+#!/bin/bash
+
+
+#------------Création de conteneur--------------
+function createContainers(){
+    read -p "Combien de conteneur.s ? : " nb_c
+    read -p "Selon quelle image ? (def = debian:latest) : " image
+    if [ -z $image ]; then
+        $image="debian:latest"
+    fi
+
+    if [ ! -f ~/.ssh/id_rsa ]; then
+        ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa &> /dev/null
+        echo "Clé SSH générée dans ~/.ssh/id_rsa"
+    else
+        echo "Clé SSH existante trouvée, utilisation de ~/.ssh/id_rsa"
+    fi
+    
+    for ((i=1; i<=nb_c; i++)); do
+		sudo docker run -dit --publish-all=true --name node-$i $image
+        sudo docker exec node-$i /bin/sh -c "apt update && apt install ssh"
+		sudo docker exec node-$i /bin/sh -c "chmod 0700 .ssh/" #Personne aura acces sauf l'utilisateur, et il aura tous les droits.
+		sudo docker cp ~/.ssh/id_rsa.pub node-$i:/$USER/.ssh/authorized_keys
+		sudo docker exec node-$i /bin/sh -c "chmod 600 .ssh/authorized_keys" #Comme l'user est le seul a acceder il pourra lire et écrire.
+        sudo docker exec node-$i /bin/sh -c "service ssh start"
+	done
+}
+
+
+#------------Informations conteneur--------------
+infosContainers(){
+	echo ""
+	echo "Informations des conteneurs : "
+	echo ""
+    sudo docker ps -aq | awk '{system("sudo docker inspect -f \"{{.Name}} -- IP: {{.NetworkSettings.IPAddress}}\" "$1)}' #system() applique pour chaque id trouvé
+	echo ""
+    read -p ""
+    exit 0
+}
+
+
+#---------------Drop un conteneur---------------
+dropContainers(){
+    read -p "Conteneur à drop : " cont
+    sudo docker stop $cont && sudo docker rm $$cont
+}
+
+
+#---------------Start un conteneur----------------
+startContainers(){
+  sudo docker ps -a --format {{.Names}} | read -p "Conteneur à démarrer : " cont | echo "Démarrage en cours..." | sudo docker start $cont 
+}
+
+
+#---------------Stop un conteneur------------------
+stopContainers(){
+    sudo docker ps -a --format {{.Names}} | read -p "Conteneur à démarrer : " cont | echo "Démarrage en cours..." | sudo docker start $cont
+}
+
+
+usage(){
+    read -p "
+ Usage $0 :
+ - c : Création
+ - i : Informations
+ - s : Démarrage
+ - t : Arrêt
+ - d : Drop
+    
+ Sélection : " choix
+
+    case $choix in
+        "c") createContainers;;
+        "i") infosContainers;;
+        "s") startContainers;;
+        "t") stopContainers;;
+        "d") dropContainers;;
+    esac
+}
+
+usage
