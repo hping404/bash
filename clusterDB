@@ -1,0 +1,103 @@
+#!/bin/bash
+#Fonctions vue et modifs
+function maria_galera(){
+    read -p "Lancer ou Modifier le Playbook ? (l/m) " choix
+    if [ $choix == "m" ]; then
+        nano /etc/ansible/galera/tasks/main.yml
+    elif [ $choix == "l" ]; then
+        echo "Lancement du Playbook MariaDB et Galera"
+        ansible-playbook /etc/ansible/galera/tasks/main79.yml && echo "Configuration MariaDB et Galera effectuée" && read -p "Entrez une touche : "
+        clear
+    else menu
+    fi
+}
+
+function databases(){
+    read -p "Lancer ou Modifier le Playbook ? (l/m) " choix
+    if [ $choix == "m" ]; then
+        nano /etc/ansible/galera/tasks/createdata.yml
+    elif [ $choix == "l" ]; then
+        echo "Lancement du Playbook Databases"
+        ansible-playbook /etc/ansible/galera/tasks/createdata.yml && echo "Configuration Databases effectuée" && read -p "Entrez une touche : "
+        clear
+    else menu
+    fi
+}
+
+function backup(){
+    read -p "Lancer ou Modifier le Playbook ? (l/m) " choix
+    if [ $choix == "m" ]; then
+        nano /etc/ansible/galera/tasks/backup.yml
+    elif [ $choix == "l" ]; then
+        echo "Lancement du Playbook Backup"
+        ansible-playbook /etc/ansible/galera/tasks/backup.yml && echo "Configuration Backup effectuée" && read -p "Entrez une touche : "
+        clear
+    else menu
+    fi
+}
+
+#Fonction lancement
+function lancement (){
+    echo "Lancement du Playbook MariaDB et Galera"
+    ansible-playbook /etc/ansible/galera/tasks/main.yml && echo "Configuration MariaDB et Galera effectuée" && read -p "Entrez une touche : "
+    clear
+    
+    echo "Lancement du Playbook Databases"
+    ansible-playbook /etc/ansible/galera/tasks/createdata.yml && echo "Configuration Databases effectuée" && read -p "Entrez une touche : "
+    clear
+
+    echo "Lancement du Playbook Backup"
+    ansible-playbook /etc/ansible/galera/tasks/backup.yml && echo "Configuration Backup effectuée" && read -p "Entrez une touche : "
+    clear
+
+    echo "Lancement des Playbook réussi !" && read -p "Entrez une touche : "
+    clear
+}
+
+#Menu des sauvegardes
+function saves () {
+    echo "===== Menu des sauvegardes====="
+    echo "1) Liste des sauvegardes"
+    echo "2) Restaurer une sauvegarde"
+    echo "3) Supprimer une sauvegarde"
+    read -p "Choix : " choix
+
+    if [ $choix == "1" ]; then
+        ssh root@192.168.240.15 "ls /opt/mysql_backups/"
+    elif [ $choix == "2" ]; then
+        ssh root@192.168.240.15 "ls /opt/mysql_backups/"
+        read -p "Quelle sauvegarde voulez-vous restaurer ? : " save
+        ssh root@192.168.240.15 "mysql -u root -proot < /opt/mysql_backups/$save"
+    elif [ $choix == "3" ]; then
+        ssh root@192.168.240.15 "ls /opt/mysql_backups/"
+        read -p "Quelle sauvegarde voulez-vous supprimer ? : " delete
+        ssh root@192.168.240.15 "rm -f /opt/mysql_backups/$delete"
+    else menu
+    fi
+}
+
+#Menu principal
+function menu(){
+    clear
+    echo "======================================"
+    echo "==========Menu Ansible========="
+    echo "1) Playbook MariaDB et Galera"
+    echo "2) Playbook Databases"
+    echo "3) Playbook Backup"
+    echo "4) Lancement des Playbook"
+    echo "5) Menu des sauvegardes"
+    echo "q) Quitter"
+    echo "======================================"
+    read -p "Choix : " choix
+    case $choix in
+    "1") maria_galera ;;
+    "2") databases ;;
+    "3") backup ;;
+    "4") lancement ;;
+    "5") savees ;;
+    "q") exit ;;
+    esac
+}
+
+#Début du programme
+menu
