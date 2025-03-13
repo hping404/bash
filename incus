@@ -1,0 +1,95 @@
+#!/bin/bash
+
+
+#-----------Fonctions création--------
+function create(){
+    read -p "Nommez votre conteneur : " name_c
+    read -p "Quel sera l'image utilisée ? [ubuntu] " image
+    read -p "Quel sera le nombre de coeur ? [1] " cpu
+    read -p "Quelle sera la taille de la mémoire vive ? [500] " memo
+
+if [[ -z $image && -z $cpu && -z $memo ]]
+then
+    incus launch images:ubuntu/22.04 $name_c -c limits.cpu=1 -c limits.memory=500MiB
+else
+    incus launch images:"$image" $name_c -c limits.cpu=$cpu -c limits.memory="$memo"MiB
+fi
+start
+}
+
+
+#------Fonctions infos---------
+function info(){
+    echo "===Informations sur les machines==="
+    echo "1) Liste des machines"
+    echo "2) Recherche des informations sur une machine existante"
+    echo "3) Menu"
+    read -p "Votre choix : " choix
+    case $choix in
+        "1") incus list ;;
+        "2") recherche ;;
+        "3") start ;;
+    esac
+    info
+}
+
+#Pas de variable apres read -p des résultats pour permettre de lire sans que cela defile et des que tu mets entree ca passe
+function recherche(){
+    read -p "Entrez le nom de la machine pour obtenir ses infos : " machine_list
+    read -p "Quelles infos voulez-vous obtenir ? " get_info
+    incus config show "$machine_list" | egrep -e "$get_info" && read -p "Voici les résultats"
+    info
+}
+
+
+#-------Fonction supprimer
+function delete(){
+read -p "Quel conteneur souhaitez-vous supprimer ? " delete_c
+incus delete $delete_c
+start
+}
+
+
+#-----Fonction connexion machine
+function co(){
+    read -p "À quelle machine voulez-vous vous connecter ? " connexion
+    incus exec $connexion bash
+    start
+}
+
+
+#---------Fonction allumer éteindre
+function on_off(){
+    read -p "Souhaitez-vous allumer (start) ou éteindre (stop) une machine ? " reponse
+    read -p "Quelle machine ? " machine
+    incus $reponse $machine
+    start
+}
+
+
+#----------Programme---------
+function start(){
+    clear
+    echo "== Bienvenue ($USER) ==="
+    
+    echo "=="
+    echo "=== Menu Incus ==="
+    echo "1) Créer un nouveau conteneur"
+    echo "2) Menu des informations des machines"
+    echo "3) Connexion à une machine"
+    echo "4) Lancer ou éteindre une machine"
+    echo "5) Supprimer un conteneur"
+    echo "q) Sortir"
+    read -p "Quel est votre choix ? " choice
+
+    case $choice in
+        "1") create ;;
+        "2") info ;;
+        "3") co ;;
+        "4") on_off ;;
+        "5") delete ;;
+        "q") exit 1 ;;
+        *) echo "Choix incorrect" ;;
+    esac
+}
+start
