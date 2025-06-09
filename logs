@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#vars
+container_ac="accueil"
+container_do="docker"
+container_an="ansible"
+container_je="jenkins"
+container_te="terraform"
+container_ku="kubernetes"
+containers=("$container_ac" "$container_do" "$container_an" "$container_je" "$container_te" "$container_ku")
+
+#serv database
+REMOTE_USER="root"                     
+REMOTE_HOST="192.168.240.10"                   
+REMOTE_DIR="/var/log/docker_logs"              
+
+#répertoir
+LOG_TMP_DIR="/tmp/docker_logs"
+mkdir -p "$LOG_TMP_DIR"
+
+#code
+for container in "${containers[@]}"; do
+    log_file="${LOG_TMP_DIR}/${container}_$(date +%Y%m%d_%H%M%S).log"
+    docker logs "$container" > "$log_file"
+    scp "$log_file" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
+    rm -f "$log_file"
+done
