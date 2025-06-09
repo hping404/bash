@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#vars
+image="debian:latest"
+container_ac="accueil"
+container_do="docker"
+container_an="ansible"
+container_je="jenkins"
+container_te="terraform"
+container_ku="kubernetes"
+containers=("$container_ac" "$container_do" "$container_an" "$container_je" "$container_te" "$container_ku")
+port="9000"
+
+#code
+for i in ${containers[@]} ; do
+    docker run --name "$i" -dit -p "$port":443 "$image"
+    ((port++))
+done
+
+for i in ${containers[@]} ; do
+    docker start $i
+done
