@@ -2,7 +2,7 @@
 
 #--------------Variables
 
-dossier_smb="/home/share" #ceci permet de faire un raccourci, la variable prend ce qui est représentée...
+dossier_smb="/home/share" 
 
 
 #-------------Fonctions
@@ -49,7 +49,7 @@ function config_smb(){
     clear
     read -p "Comment appeler le partage ? " partage_web
     read -p "Quel utilisateur peut se connecter au partage ? " user_smb
-    smbpasswd $user_smb #pour créer un mdp car obligatoire, le mdp que tu as déjà peut pas etre utilisé
+    smbpasswd $user_smb #pour créer un mdp car obligatoire
     echo "
     [$partage_smb]
     path = $dossier_smb
@@ -65,9 +65,7 @@ function config_smb(){
     clear
     echo "Partage actif pour $user_smb le partage se trouve dans $dossier_smb et se nomme $partage_smb"
     read -p "Appuyez sur une touche pour continuer" #en ne mettant pas de variable apres tu peux mettre le programme en standby et repartir en appuyant sur X touche
-}
-#broweable si on peut naviguer dans le partage
-#sur certain protocole il y a un "d" à la fin, il s'agit de daemon, c'est le service, concretement celui sans le d est le service client et l'autre est pour la config du serveur
+} 
 
 
 #-------------Début programme
