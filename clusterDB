@@ -63,15 +63,15 @@ function saves () {
     read -p "Choix : " choix
 
     if [ $choix == "1" ]; then
-        ssh root@192.168.240.15 "ls /opt/mysql_backups/"
+        ssh root@$IP "ls /opt/mysql_backups/"
     elif [ $choix == "2" ]; then
-        ssh root@192.168.240.15 "ls /opt/mysql_backups/"
+        ssh root@$IP "ls /opt/mysql_backups/"
         read -p "Quelle sauvegarde voulez-vous restaurer ? : " save
-        ssh root@192.168.240.15 "mysql -u root -proot < /opt/mysql_backups/$save"
+        ssh root@$IP "mysql -u root -proot < /opt/mysql_backups/$save"
     elif [ $choix == "3" ]; then
-        ssh root@192.168.240.15 "ls /opt/mysql_backups/"
+        ssh root@$IP "ls /opt/mysql_backups/"
         read -p "Quelle sauvegarde voulez-vous supprimer ? : " delete
-        ssh root@192.168.240.15 "rm -f /opt/mysql_backups/$delete"
+        ssh root@$IP "rm -f /opt/mysql_backups/$delete"
     else menu
     fi
 }
