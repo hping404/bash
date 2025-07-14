@@ -11,7 +11,7 @@ containers=("$container_ac" "$container_do" "$container_an" "$container_je" "$co
 
 #serv database
 REMOTE_USER="root"                     
-REMOTE_HOST="192.168.240.10"                   
+REMOTE_HOST="mystere"                   
 REMOTE_DIR="/var/log/docker_logs"              
 
 #répertoir
