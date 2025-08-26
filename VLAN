@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#var
+IP=$(ip -o -4 addr show scope global | awk '{print $4}' | cut -d/ -f1)
+INTERFACE=$(ip -o -4 addr show scope global | awk '{print $2}' | head -n1)
+NBR=10 #modifier à chaque fois ou menu ?
+VLAN="$INTERFACE.$NBR"
+
+#code
+apt update && sudo apt install vlan -y #si dans playbook, utiliser direct module apt
+modprobe 8021q
+ip link add link "$INTERFACE" name "$VLAN" type vlan id "$NBR"
+ip addr add "$IP"/24 dev "$VLAN"
+ip link set dev "$VLAN" up
