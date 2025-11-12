@@ -1,0 +1,54 @@
+#/bin/bash
+
+#pour le cron, rajouter : */5 0-23 * * * [ "$(date +\%M)" -ne 00 ] && /path/vers/script
+
+adresse=""
+user="user"                        #je peux mettre les variables en var d'env sur terminal avec la commande : export DB_PASSWORD="mon_mot_de_passe"
+mdp="mdp"
+db=""
+
+QUERY1="select..."
+QUERY2="select..."
+QUERY3="select..."
+QUERY4="select..."
+QUERY5="WITH..."
+
+#source /path/vers/le/fichier/fichier_vars.conf              #si on utilise source pour les variables.
+rqt_sql_list=("$QUERY1" "$QUERY2" "$QUERY3" "$QUERY4" "$QUERY5")
+
+tps_lmt="300"                      #5min comme délais maximum.
+
+for i in ${rqt_sql_list[@]};
+do
+    op_sql=$(mysql -h "$adresse" -u "$user" -p "$mdp" -D "$db" -se ""$i"")  #j'enlève -s si jai besoin des colonnes (pas tip-top qd envoi du mail si pas colonnes).
+    time1=$(echo "$op_sql" | grep récuperer_le_tps1)                        #grep sera pour récupérer les heures, minutes et secondes.
+    time2=$(echo "$op_sql" | grep récuperer_le_tps2)
+    
+    IFS=: read -r hour1 min1 sec1 <<< "$time1"
+    IFS=: read -r hour2 min2 sec2 <<< "$time2"
+
+    total_sec1=$((hour1 * 3600 + min1 * 60 + sec1))
+    total_sec2=$((hour2 * 3600 + min2 * 60 + sec2))
+
+    if [ $total_sec2 -gt $total_sec1 ]; then
+        diff=$((total_sec2 - total_sec1))
+    else
+        diff=$((total_sec1 - total_sec2))
+    fi
+
+    check_tps () {
+        if [ $diff -gt $tps_lmt ]; then
+            send_mail
+        else                         
+            return 0
+        fi
+    }
+
+    send_mail () {
+        file=$(echo "$op_sql" > rapport_perf.txt)
+        #mail -s "Sujet du mail" -a $file user_name@domaine.com < /dev/null #si pas besoin de corps 
+        echo "Corps du mail, ex : Urgence, perte de performance, délais de $tps_lmt seconde dépassé." | mail -s "Sujet du mail" -a $file user_name@domaine.com
+    }
+
+    check_tps
+done
