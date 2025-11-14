@@ -2,28 +2,27 @@
 
 #pour le cron, rajouter : */5 0-23 * * * [ "$(date +\%M)" -ne 00 ] && /path/vers/script
 
-adresse=""
-user="user"                        #je peux mettre les variables en var d'env sur terminal avec la commande : export DB_PASSWORD="mon_mot_de_passe"
-mdp="mdp"
-db=""
+HOST="xx.xx.xx.xx"
+USER="user"
+PASSWORD="mdp"
+DB="database"
 
 QUERY1="select..."
 QUERY2="select..."
 QUERY3="select..."
 QUERY4="select..."
-QUERY5="WITH..."
 
 #source /path/vers/le/fichier/fichier_vars.conf              #si on utilise source pour les variables.
-rqt_sql_list=("$QUERY1" "$QUERY2" "$QUERY3" "$QUERY4" "$QUERY5")
+rqt_sql_list=("$QUERY1" "$QUERY2" "$QUERY3" "$QUERY4")
 
-tps_lmt="300"                      #5min comme délais maximum.
+tps_lmt="300"
 
 for i in ${rqt_sql_list[@]};
 do
-    op_sql=$(mysql -h "$adresse" -u "$user" -p "$mdp" -D "$db" -se ""$i"")  #j'enlève -s si jai besoin des colonnes (pas tip-top qd envoi du mail si pas colonnes).
-    time1=$(echo "$op_sql" | grep récuperer_le_tps1)                        #grep sera pour récupérer les heures, minutes et secondes.
-    time2=$(echo "$op_sql" | grep récuperer_le_tps2)
-    
+    op_sql=$(mysql -h "$adresse" -u "$user" -p "$mdp" -D "$db" -se ""$i"")
+    time1=$(echo "$op_sql" | awk 'NR==2 {print $3}' | grep -oP '\d{1,2}:\d{2}:\d{2}')
+    time2=$(echo "$op_sql" | awk 'NR==2 {print $4}' | grep -oP '\d{1,2}:\d{2}:\d{2}')
+
     IFS=: read -r hour1 min1 sec1 <<< "$time1"
     IFS=: read -r hour2 min2 sec2 <<< "$time2"
 
