@@ -2,10 +2,10 @@
 
 #pour le cron, rajouter : */5 0-23 * * * [ "$(date +\%M)" -ne 00 ] && /path/vers/script
 
-HOST="xx.xx.xx.xx"
-USER="user"
-PASSWORD="mdp"
-DB="database"
+host="xx.xx.xx.xx"
+user="user"
+password="mdp"
+db="database"
 
 QUERY1="select..."
 QUERY2="select..."
@@ -19,7 +19,7 @@ tps_lmt="300"
 
 for i in ${rqt_sql_list[@]};
 do
-    op_sql=$(mysql -h "$adresse" -u "$user" -p "$mdp" -D "$db" -se ""$i"")
+    op_sql=$(mysql -h "$host" -u "$user" -p "$password" -D "$db" -se ""$i"")
     time1=$(echo "$op_sql" | awk 'NR==2 {print $3}' | grep -oP '\d{1,2}:\d{2}:\d{2}')
     time2=$(echo "$op_sql" | awk 'NR==2 {print $4}' | grep -oP '\d{1,2}:\d{2}:\d{2}')
 
