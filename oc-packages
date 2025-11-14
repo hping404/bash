@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#pour le cron rajouter : 0 16 * * 5 /path/vers/script
+
+PROJECT_NAME=$(oc get projects | awk 'NR>1 {print $1}')
+
+for project in $PROJECT_NAME;
+do
+    FILE="resume-deployment_"$project"_$(date +%Y%m%d_%H%M%S).txt"
+    date > "$FILE"
+    oc get deployment -o wide | awk 'NR>1 {print $1 " | " $7}' >> "$FILE"
+    #cat "$FILE"
+done
